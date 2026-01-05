@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>溫柔存錢｜10～365</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f6f7f8;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 22px;
+      max-width: 420px;
+      margin: auto;
+      box-shadow: 0 6px 16px rgba(0,0,0,.08);
+    }
+    h1 {
+      font-size: 22px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .hint {
+      text-align: center;
+      font-size: 14px;
+      color: #777;
+    }
+    .amount {
+      font-size: 42px;
+      text-align: center;
+      margin: 22px 0;
+      font-weight: bold;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .save {
+      background: #4CAF50;
+      color: #fff;
+    }
+    .rest {
+      margin-top: 10px;
+      background: #bbb;
+      color: #333;
+    }
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+    .total {
+      text-align: center;
+      margin-top: 16px;
+      font-weight: bold;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 18px;
+      max-height: 240px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    li {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .reset {
+      margin-top: 16px;
+      background: #f44336;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🌱 溫柔存錢</h1>
+  <div class="hint">今天能給多少都好，休息也沒關係</div>
+
+  <div class="amount" id="todayAmount">—</div>
+
+  <button class="save" id="saveBtn">今天存這個金額</button>
+  <button class="rest" id="restBtn">今天休息也可以</button>
+
+  <div class="total" id="totalAmount">累積金額：0 元</div>
+
+  <ul id="recordList"></ul>
+
+  <button class="reset" onclick="resetData()">重新開始</button>
+</div>
+
+<script>
+  const today = new Date().toISOString().split("T")[0];
+
+  const todayAmountEl = document.getElementById("todayAmount");
+  const saveBtn = document.getElementById("saveBtn");
+  const restBtn = document.getElementById("restBtn");
+  const totalAmountEl = document.getElementById("totalAmount");
+  const recordList = document.getElementById("recordList");
+
+  let records = JSON.parse(localStorage.getItem("gentleSavingRecords")) || [];
+
+  function generateRandomAmount() {
+    return Math.floor(Math.random() * (365 - 10 + 1)) + 10;
+  }
+
+  function getTodayRecord() {
+    return records.find(r => r.date === today);
+  }
+
+  function render() {
+    const todayRecord = getTodayRecord();
+
+    if (todayRecord) {
+      todayAmountEl.textContent = todayRecord.amount + " 元";
+      saveBtn.disabled = true;
+      restBtn.disabled = true;
+      saveBtn.textContent = "今天已存過";
+    } else {
+      todayAmountEl.textContent = generateRandomAmount() + " 元";
+      saveBtn.disabled = false;
+      restBtn.disabled = false;
+      saveBtn.textContent = "今天存這個金額";
+    }
+
+    const total = records.reduce((sum, r) => sum + r.amount, 0);
+    totalAmountEl.textContent = "累積金額：" + total + " 元";
+
+    recordList.innerHTML = "";
+    records.slice().reverse().forEach(r => {
+      const li = document.createElement("li");
+      li.textContent = `${r.date}｜${r.amount} 元`;
+      recordList.appendChild(li);
+    });
+  }
+
+  saveBtn.addEventListener("click", () => {
+    const amount = parseInt(todayAmountEl.textContent);
+    records.push({ date: today, amount });
+    localStorage.setItem("gentleSavingRecords", JSON.stringify(records));
+    render();
+  });
+
+  restBtn.addEventListener("click", () => {
+    alert("今天選擇休息，也是一種照顧 🤍");
+    saveBtn.disabled = true;
+    restBtn.disabled = true;
+    saveBtn.textContent = "今天已選擇休息";
+  });
+
+  function resetData() {
+    if (confirm("確定要清空所有紀錄嗎？")) {
+      localStorage.removeItem("gentleSavingRecords");
+      records = [];
+      render();
+    }
+  }
+
+  render();
+</script>
+
+</body>
+</html>
